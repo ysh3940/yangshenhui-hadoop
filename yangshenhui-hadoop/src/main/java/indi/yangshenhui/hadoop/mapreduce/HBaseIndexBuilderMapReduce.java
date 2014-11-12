@@ -21,7 +21,6 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.Job;
 
 /**
- * HBaseIndexBuilder
  * 
  * @author yangshenhui
  */

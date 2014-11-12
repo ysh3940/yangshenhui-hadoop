@@ -14,7 +14,6 @@ import org.apache.hadoop.hbase.mapreduce.TableMapper;
 import org.apache.hadoop.mapreduce.Job;
 
 /**
- * CopyHTableMR
  * 
  * @author yangshenhui
  */
