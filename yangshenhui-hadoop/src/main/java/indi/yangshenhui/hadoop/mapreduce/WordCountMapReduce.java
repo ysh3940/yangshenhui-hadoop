@@ -17,7 +17,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-
 import org.wltea.analyzer.core.IKSegmenter;
 import org.wltea.analyzer.core.Lexeme;
 
@@ -27,16 +26,13 @@ import org.wltea.analyzer.core.Lexeme;
  */
 public class WordCountMapReduce extends Configured implements Tool {
 
-	public static class Map extends
-			Mapper<LongWritable, Text, Text, IntWritable> {
+	public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
 		private IntWritable one = new IntWritable(1);
 		private Text word = new Text();
 
-		public void map(LongWritable key, Text value, Context context)
-				throws IOException, InterruptedException {
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			String line = value.toString();
-			IKSegmenter ikSegmenter = new IKSegmenter(new StringReader(line),
-					false);
+			IKSegmenter ikSegmenter = new IKSegmenter(new StringReader(line), false);
 			Lexeme lexeme = null;
 			while ((lexeme = ikSegmenter.next()) != null) {
 				word.set(lexeme.getLexemeText());
@@ -46,11 +42,10 @@ public class WordCountMapReduce extends Configured implements Tool {
 
 	}
 
-	public static class Reduce extends
-			Reducer<Text, IntWritable, Text, IntWritable> {
+	public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
 
-		public void reduce(Text key, Iterable<IntWritable> values,
-				Context context) throws IOException, InterruptedException {
+		public void reduce(Text key, Iterable<IntWritable> values, Context context)
+				throws IOException, InterruptedException {
 			int sum = 0;
 			for (IntWritable intWritable : values) {
 				sum = sum + intWritable.get();

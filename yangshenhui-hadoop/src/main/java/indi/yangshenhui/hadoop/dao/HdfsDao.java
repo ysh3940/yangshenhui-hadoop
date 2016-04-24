@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.log4j.Logger;
 
@@ -30,10 +31,19 @@ import org.apache.log4j.Logger;
  * @author yangshenhui
  */
 public class HdfsDao {
-	private static final String HDFS = "hdfs://redhat:9000/";
+	private static final String HDFS = "hdfs://ubuntu-1:8020/";
 	private static final Logger LOGGER = Logger.getLogger(HdfsDao.class);
 	private String hdfsPath;
 	private Configuration configuration;
+
+	public static void main(String[] args) throws HdfsDaoException {
+		Configuration configuration = HBaseConfiguration.create();
+		HdfsDao hdfsDao = new HdfsDao(configuration);
+		List<Path> paths = hdfsDao.listDirectory("/");
+		for (Path path : paths) {
+			System.err.println(path.toString());
+		}
+	}
 
 	public HdfsDao(Configuration configuration) {
 		this(HDFS, configuration);
@@ -48,23 +58,18 @@ public class HdfsDao {
 		if (StringUtil.isEmpty(directory)) {
 			return false;
 		}
-		LOGGER.info(String
-				.format("start create hdfs directory [%s]", directory));
+		LOGGER.info(String.format("start create hdfs directory [%s]", directory));
 		FileSystem fileSystem = null;
 		try {
 			fileSystem = FileSystem.get(URI.create(hdfsPath), configuration);
 			Path path = new Path(directory);
 			if (fileSystem.exists(path)) {
-				LOGGER.info(String.format(
-						"hdfs directory [%s] already exists can not create",
-						directory));
+				LOGGER.info(String.format("hdfs directory [%s] already exists can not create", directory));
 				return false;
 			}
 			fileSystem.mkdirs(path);
-			LOGGER.info(String.format("hdfs directory [%s] create success",
-					directory));
-			LOGGER.info(String.format("end create hdfs directory [%s]",
-					directory));
+			LOGGER.info(String.format("hdfs directory [%s] create success", directory));
+			LOGGER.info(String.format("end create hdfs directory [%s]", directory));
 		} catch (IOException e) {
 			throw new HdfsDaoException(e);
 		} finally {
@@ -77,17 +82,14 @@ public class HdfsDao {
 		if (StringUtil.isEmpty(directory)) {
 			return false;
 		}
-		LOGGER.info(String
-				.format("start remove hdfs directory [%s]", directory));
+		LOGGER.info(String.format("start remove hdfs directory [%s]", directory));
 		FileSystem fileSystem = null;
 		try {
 			fileSystem = FileSystem.get(URI.create(hdfsPath), configuration);
 			Path path = new Path(directory);
 			fileSystem.deleteOnExit(path);
-			LOGGER.info(String.format("hdfs directory [%s] remove success",
-					directory));
-			LOGGER.info(String.format("end remove hdfs directory [%s]",
-					directory));
+			LOGGER.info(String.format("hdfs directory [%s] remove success", directory));
+			LOGGER.info(String.format("end remove hdfs directory [%s]", directory));
 		} catch (IOException e) {
 			throw new HdfsDaoException(e);
 		} finally {
@@ -107,14 +109,12 @@ public class HdfsDao {
 			fileSystem = FileSystem.get(URI.create(hdfsPath), configuration);
 			Path path = new Path(directory);
 			if (!fileSystem.exists(path)) {
-				LOGGER.info(String.format("hdfs directory [%s] does not exist",
-						directory));
+				LOGGER.info(String.format("hdfs directory [%s] does not exist", directory));
 				return null;
 			}
 			pathList = new ArrayList<Path>();
 			list(pathList, fileSystem, path);
-			LOGGER.info(String
-					.format("end list hdfs directory [%s]", directory));
+			LOGGER.info(String.format("end list hdfs directory [%s]", directory));
 		} catch (IOException e) {
 			throw new HdfsDaoException(e);
 		} finally {
@@ -123,8 +123,7 @@ public class HdfsDao {
 		return pathList;
 	}
 
-	private void list(List<Path> fileList, FileSystem fileSystem, Path path)
-			throws FileNotFoundException, IOException {
+	private void list(List<Path> fileList, FileSystem fileSystem, Path path) throws FileNotFoundException, IOException {
 		FileStatus[] fileStatuses = fileSystem.listStatus(path);
 		for (FileStatus fileStatus : fileStatuses) {
 			if (fileStatus.isDirectory()) {
@@ -135,8 +134,7 @@ public class HdfsDao {
 		}
 	}
 
-	public boolean create(String fileName, List<String> contentList)
-			throws HdfsDaoException {
+	public boolean create(String fileName, List<String> contentList) throws HdfsDaoException {
 		if (StringUtil.isEmpty(fileName)) {
 			return false;
 		}
@@ -147,9 +145,7 @@ public class HdfsDao {
 			fileSystem = FileSystem.get(URI.create(hdfsPath), configuration);
 			Path path = new Path(fileName);
 			if (fileSystem.exists(path)) {
-				LOGGER.info(String.format(
-						"hdfs file [%s] already exists can not create",
-						fileName));
+				LOGGER.info(String.format("hdfs file [%s] already exists can not create", fileName));
 				return false;
 			}
 			fsDataOutputStream = fileSystem.create(path);
@@ -170,24 +166,17 @@ public class HdfsDao {
 		return true;
 	}
 
-	public boolean upload(String localFile, String remoteDirectory)
-			throws HdfsDaoException {
-		if (StringUtil.isEmpty(localFile)
-				|| StringUtil.isEmpty(remoteDirectory)) {
+	public boolean upload(String localFile, String remoteDirectory) throws HdfsDaoException {
+		if (StringUtil.isEmpty(localFile) || StringUtil.isEmpty(remoteDirectory)) {
 			return false;
 		}
-		LOGGER.info("start upload file [" + localFile + "] to hdfs directory ["
-				+ remoteDirectory + "]");
+		LOGGER.info("start upload file [" + localFile + "] to hdfs directory [" + remoteDirectory + "]");
 		FileSystem fileSystem = null;
 		try {
 			fileSystem = FileSystem.get(URI.create(hdfsPath), configuration);
-			fileSystem.copyFromLocalFile(new Path(localFile), new Path(
-					remoteDirectory));
-			LOGGER.info(String.format(
-					"upload local file [%s] to hdfs directory [%s]", localFile,
-					remoteDirectory));
-			LOGGER.info("end upload file [" + localFile
-					+ "] to hdfs directory [" + remoteDirectory + "]");
+			fileSystem.copyFromLocalFile(new Path(localFile), new Path(remoteDirectory));
+			LOGGER.info(String.format("upload local file [%s] to hdfs directory [%s]", localFile, remoteDirectory));
+			LOGGER.info("end upload file [" + localFile + "] to hdfs directory [" + remoteDirectory + "]");
 		} catch (IOException e) {
 			throw new HdfsDaoException(e);
 		} finally {
@@ -196,29 +185,22 @@ public class HdfsDao {
 		return true;
 	}
 
-	public boolean download(String remoteFile, String localDirectory)
-			throws HdfsDaoException {
-		if (StringUtil.isEmpty(remoteFile)
-				|| StringUtil.isEmpty(localDirectory)) {
+	public boolean download(String remoteFile, String localDirectory) throws HdfsDaoException {
+		if (StringUtil.isEmpty(remoteFile) || StringUtil.isEmpty(localDirectory)) {
 			return false;
 		}
-		LOGGER.info("start download hdfs file [" + remoteFile
-				+ "] to local directory [" + localDirectory + "]");
+		LOGGER.info("start download hdfs file [" + remoteFile + "] to local directory [" + localDirectory + "]");
 		FileSystem fileSystem = null;
 		FSDataInputStream fsDataInputStream = null;
 		OutputStream outputStream = null;
 		try {
 			fileSystem = FileSystem.get(URI.create(hdfsPath), configuration);
 			fsDataInputStream = fileSystem.open(new Path(remoteFile));
-			localDirectory = localDirectory + File.separator
-					+ extractFileName(remoteFile);
+			localDirectory = localDirectory + File.separator + extractFileName(remoteFile);
 			outputStream = new FileOutputStream(new File(localDirectory));
 			IOUtils.copyBytes(fsDataInputStream, outputStream, 4096, false);
-			LOGGER.info(String.format(
-					"download hdfs file [%s] to local directory [%s]",
-					remoteFile, localDirectory));
-			LOGGER.info("end download hdfs file [" + remoteFile
-					+ "] to local directory [" + localDirectory + "]");
+			LOGGER.info(String.format("download hdfs file [%s] to local directory [%s]", remoteFile, localDirectory));
+			LOGGER.info("end download hdfs file [" + remoteFile + "] to local directory [" + localDirectory + "]");
 		} catch (IOException e) {
 			throw new HdfsDaoException(e);
 		} finally {
@@ -230,8 +212,7 @@ public class HdfsDao {
 	}
 
 	private String extractFileName(String filePath) {
-		return StringUtils.substring(filePath,
-				StringUtils.lastIndexOf(filePath, "/") + 1, filePath.length());
+		return StringUtils.substring(filePath, StringUtils.lastIndexOf(filePath, "/") + 1, filePath.length());
 	}
 
 }
